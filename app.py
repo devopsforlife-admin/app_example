@@ -34,5 +34,7 @@ def update_task(task_id):
 
 # Need to add here the DELETE endpoint
 
+# Need to improve the error handling 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5800, debug=True)    
