@@ -110,5 +110,7 @@ def patch_task(task_id):
         logging.error(f"Error patching task {task_id}: {e}")
         return jsonify({"error": "An error occurred while updating the task"}), 500
 
+# Need to ADD here the DELETE endpoint that is not implemented. 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5800, debug=True)
