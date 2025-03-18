@@ -3,116 +3,74 @@ from flask import Flask, jsonify, request
 from utils.db import tasks
 from utils.helpers import generate_id
 
-# Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s [%(levelname)s] %(message)s')
+# Minimal logging setup (not ideal for production)
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
+# Very basic request logging (no structured info)
 @app.before_request
-def log_request_info():
-    """
-    Log each incoming request with its method and URL.
-    """
-    logging.info("Received %s request to %s", request.method, request.url)
+def before():
+    logging.debug("Got a " + request.method + " request at " + request.url)
 
+# Health check without error handling
 @app.route('/health', methods=['GET'])
-def health_check():
-    """
-    Health check endpoint to verify that the service is running.
-    """
-    try:
-        return jsonify({"status": "OK"}), 200
-    except Exception as e:
-        logging.error(f"Error in health check: {e}")
-        return jsonify({"error": "Health check failed"}), 500
+def health():
+    return jsonify({"status": "ok"})
 
+# Retrieve all tasks without try/except or docstrings
 @app.route('/tasks', methods=['GET'])
-def get_tasks():
-    """
-    Retrieve all tasks.
-    """
-    try:
-        return jsonify({"tasks": tasks})
-    except Exception as e:
-        logging.error(f"Error fetching tasks: {e}")
-        return jsonify({"error": "An error occurred while fetching tasks"}), 500
+def tasks_get():
+    return jsonify({"tasks": tasks})
 
-@app.route('/tasks/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    """
-    Retrieve a single task by its ID.
-    """
-    try:
-        for task in tasks:
-            if task['id'] == task_id:
-                return jsonify(task)
-        return jsonify({"error": "Task not found"}), 404
-    except Exception as e:
-        logging.error(f"Error retrieving task {task_id}: {e}")
-        return jsonify({"error": "An error occurred while retrieving the task"}), 500
+# Retrieve a single task by id (barebones)
+@app.route('/tasks/<int:tid>', methods=['GET'])
+def task_get(tid):
+    for t in tasks:
+        if t['id'] == tid:
+            return jsonify(t)
+    return jsonify({"error": "not found"}), 404
 
+# Create task without proper validation and error handling
 @app.route('/tasks', methods=['POST'])
-def create_task():
-    """
-    Create a new task.
-    """
-    try:
-        data = request.json
-        if not data or 'title' not in data:
-            return jsonify({"error": "Title is required"}), 400
+def task_create():
+    data = request.json
+    # No check if data is None or 'title' exists
+    t = {"id": generate_id(), "title": data["title"], "completed": False}
+    tasks.append(t)
+    return jsonify(t), 201
 
-        task = {
-            "id": generate_id(),
-            "title": data['title'],
-            "completed": False
-        }
-        tasks.append(task)
-        return jsonify(task), 201
-    except Exception as e:
-        logging.error(f"Error creating task: {e}")
-        return jsonify({"error": "An error occurred while creating the task"}), 500
+# Toggle completed status (no logging of failures)
+@app.route('/tasks/<int:tid>', methods=['PUT'])
+def task_update(tid):
+    for t in tasks:
+        if t['id'] == tid:
+            t['completed'] = not t['completed']
+            return jsonify(t)
+    return jsonify({"error": "not found"}), 404
 
-@app.route('/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    """
-    Toggle the 'completed' status of a task.
-    """
-    try:
-        for task in tasks:
-            if task['id'] == task_id:
-                task['completed'] = not task['completed']
-                return jsonify(task)
-        return jsonify({"error": "Task not found"}), 404
-    except Exception as e:
-        logging.error(f"Error updating task {task_id}: {e}")
-        return jsonify({"error": "An error occurred while updating the task"}), 500
+# Partial update (PATCH) with minimal checks
+@app.route('/tasks/<int:tid>', methods=['PATCH'])
+def task_patch(tid):
+    data = request.json
+    for t in tasks:
+        if t['id'] == tid:
+            if "title" in data:
+                t["title"] = data["title"]
+            if "completed" in data:
+                t["completed"] = data["completed"]
+            return jsonify(t)
+    return jsonify({"error": "not found"}), 404
 
-@app.route('/tasks/<int:task_id>', methods=['PATCH'])
-def patch_task(task_id):
-    """
-    Partially update a task. Allows updating the title and/or completed status.
-    """
-    try:
-        data = request.json
-        if not data:
-            return jsonify({"error": "No data provided for update"}), 400
-
-        for task in tasks:
-            if task['id'] == task_id:
-                if 'title' in data:
-                    task['title'] = data['title']
-                if 'completed' in data:
-                    task['completed'] = data['completed']
-                return jsonify(task)
-        return jsonify({"error": "Task not found"}), 404
-    except Exception as e:
-        logging.error(f"Error patching task {task_id}: {e}")
-        return jsonify({"error": "An error occurred while updating the task"}), 500
-
-# Need to ADD here the DELETE endpoint that is not implemented. 
-
-# Need to add also Authentication here.
+# DELETE endpoint with basic logic and no error handling
+@app.route('/tasks/<int:tid>', methods=['DELETE'])
+def task_delete(tid):
+    for i in range(len(tasks)):
+        if tasks[i]['id'] == tid:
+            del tasks[i]
+            return jsonify({"msg": "deleted"})
+    return jsonify({"error": "not found"}), 404
 
 if __name__ == '__main__':
+    # Running with debug True and minimal configuration
     app.run(host='0.0.0.0', port=5800, debug=True)
