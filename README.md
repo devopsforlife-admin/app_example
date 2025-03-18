@@ -1,3 +1,4 @@
+
 example_app/
 ├── app.py
 ├── requirements.txt
@@ -16,7 +17,6 @@ example_app/
 A simple To-Do List API built with Flask.
 
 ## Installation
-
 
 
 
@@ -48,6 +48,7 @@ API Endpoints
 GET /tasks - List all tasks
 POST /tasks - Create a new task
 PUT /tasks/<id> - Toggle task completion
+DELETE /tasks/<id> - Delete task 
 
 ```
 
