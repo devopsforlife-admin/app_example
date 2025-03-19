@@ -110,5 +110,26 @@ def patch_task(task_id):
         logging.error(f"Error patching task {task_id}: {e}")
         return jsonify({"error": "An error occurred while updating the task"}), 500
 
+
+
+@app.route('/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    """
+    Delete a task by its ID.
+    """
+    try:
+        # Find the task by its ID
+        for index, task in enumerate(tasks):
+            if task['id'] == task_id:
+                # Remove the task from the list
+                deleted_task = tasks.pop(index)
+                return jsonify({"message": "Task deleted", "task": deleted_task}), 200
+        return jsonify({"error": "Task not found"}), 404
+    except Exception as e:
+        logging.error(f"Error deleting task {task_id}: {e}")
+        return jsonify({"error": "An error occurred while deleting the task"}), 500
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5800, debug=True)
