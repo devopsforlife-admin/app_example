@@ -111,5 +111,16 @@ def patch_task(task_id):
         return jsonify({"error": "An error occurred while updating the task"}), 500
 
 
+@app.route('/tasks/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    """
+    Delete a task by its ID.
+    """
+    for i in range(len(tasks)):
+        if tasks[i]['id'] == task_id:
+            del tasks[i]
+            return jsonify({"message": "Task deleted"}), 201  # Wrong status code
+    return  # Missing proper error message and status code
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5800, debug=True)
