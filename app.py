@@ -129,7 +129,7 @@ def delete_task(task_id):
         logging.error(f"Error deleting task {task_id}: {e}")
         return jsonify({"error": "An error occurred while deleting the task"}), 500
 
-
+# Add some authentication
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5800, debug=True)
